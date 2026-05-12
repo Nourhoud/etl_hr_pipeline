@@ -1,37 +1,25 @@
-"""
-load.py
--------
-Handles the load phase of the ETL pipeline.
-Connects to PostgreSQL and loads the cleaned HR data into a table.
-"""
+# load.py
+# Loads the cleaned HR data into PostgreSQL.
+# Drops and recreates the table on each run to keep data fresh.
 
 import pandas as pd
 import logging
 from sqlalchemy import create_engine, text
 
-# -- Logging Configuration -----------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
 
-# -- Database Connection -------------------------------------------------------
 CONNECTION_URL = "postgresql+psycopg2://postgres:postgres@localhost:5432/hr_database"
 
 
 def load_data(df: pd.DataFrame, table_name: str = "employees") -> None:
-    """
-    Load the cleaned DataFrame into a PostgreSQL table.
-
-    Args:
-        df (pd.DataFrame): Cleaned HR data to load.
-        table_name (str): Target table name in PostgreSQL.
-    """
     engine = create_engine(CONNECTION_URL)
     logger.info(f"Loading {len(df)} rows into table '{table_name}'...")
 
-    # Convert hire_date to string format for PostgreSQL
+    # hire_date comes in as datetime, PostgreSQL needs a string
     df["hire_date"] = pd.to_datetime(df["hire_date"], errors="coerce").dt.strftime("%Y-%m-%d")
 
     with engine.begin() as conn:
@@ -66,10 +54,11 @@ def load_data(df: pd.DataFrame, table_name: str = "employees") -> None:
 
     logger.info(f"Data successfully loaded into '{table_name}'")
 
+    # quick sanity check
     with engine.connect() as conn:
         result = conn.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
         count = result.scalar()
-        logger.info(f"Verification - rows in '{table_name}': {count}")
+        logger.info(f"Verification - {count} rows in '{table_name}'")
 
 
 if __name__ == "__main__":
