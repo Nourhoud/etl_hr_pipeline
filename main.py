@@ -10,6 +10,7 @@ import time
 from src.extract import extract_data
 from src.transform import transform_data
 from src.load import load_data
+from src.azure_upload import upload_to_azure
 
 # ── Logging Configuration ─────────────────────────────────────────────────────
 logging.basicConfig(
@@ -47,6 +48,10 @@ def run_pipeline():
     # ── Step 3: Load ──────────────────────────────────────────────────────────
     logger.info("STEP 3 — Load")
     load_data(clean_df)
+
+    # ── Step 4: Upload to Azure ───────────────────────────────────────────────
+    logger.info("STEP 4 — Upload to Azure")
+    upload_to_azure(clean_df)
 
     # ── Summary ───────────────────────────────────────────────────────────────
     elapsed = round(time.time() - start_time, 2)
